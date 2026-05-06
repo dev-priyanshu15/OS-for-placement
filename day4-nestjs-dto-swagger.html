@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 4 — DTOs, Validation & Swagger</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a1a;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .top-bar {
+    background: #1a1a1a;
+    padding: 18px 20px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  .tab-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .tab-btn {
+    background: #252525;
+    border: 1.5px solid #3a3a3a;
+    color: #ccc;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { background: #2e2e2e; border-color: #555; color: #fff; }
+  .tab-btn.active { background: #2a2a2a; border-color: #888; color: #fff; }
+  .content { padding: 20px; max-width: 900px; margin: 0 auto; }
+  .tab-panel { display: none; flex-direction: column; gap: 20px; }
+  .tab-panel.active { display: flex; }
+
+  /* Cards */
+  .card {
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    letter-spacing: 0.3px;
+  }
+  .badge-theory    { background: #1e3a5f; color: #60a5fa; border: 1px solid #2563eb44; }
+  .badge-file      { background: #1a3a28; color: #4ade80; border: 1px solid #16a34a44; }
+  .badge-code      { background: #2a2010; color: #fbbf24; border: 1px solid #d9770644; }
+  .badge-tip       { background: #2d1a3a; color: #c084fc; border: 1px solid #9333ea44; }
+  .badge-cheat     { background: #1a2a3a; color: #67e8f9; border: 1px solid #0891b244; }
+  .badge-warn      { background: #3a1a1a; color: #f87171; border: 1px solid #dc262644; }
+  .badge-enum      { background: #1a3a3a; color: #2dd4bf; border: 1px solid #0d9488aa; }
+
+  .card h2 { font-size: 17px; font-weight: 700; margin-bottom: 14px; color: #f0f0f0; }
+  .card h3 { font-size: 15px; font-weight: 600; margin: 14px 0 8px; color: #e0e0e0; }
+
+  /* Theory list */
+  .theory-list { background: #1c1c1c; border-radius: 8px; padding: 14px 16px; }
+  .theory-list p { margin: 5px 0; color: #ccc; font-size: 14px; }
+  .theory-list p strong { color: #f0f0f0; }
+
+  /* Blue callout */
+  .callout {
+    border-left: 3px solid #3b82f6;
+    background: #1a2535;
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    color: #94b4d4;
+    font-size: 14px;
+    margin-top: 14px;
+  }
+  .callout-orange {
+    border-left: 3px solid #f97316;
+    background: #25180a;
+    color: #fdba74;
+  }
+  .callout-red {
+    border-left: 3px solid #ef4444;
+    background: #250a0a;
+    color: #fca5a5;
+  }
+  .callout-green {
+    border-left: 3px solid #22c55e;
+    background: #0a2515;
+    color: #86efac;
+  }
+
+  /* Code block */
+  .code-block {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #cdd3de;
+    white-space: pre;
+  }
+  .kw  { color: #c792ea; }   /* keyword */
+  .fn  { color: #82aaff; }   /* function/decorator */
+  .str { color: #c3e88d; }   /* string */
+  .cm  { color: #546e7a; }   /* comment */
+  .ty  { color: #ffcb6b; }   /* type */
+  .nm  { color: #f78c6c; }   /* number */
+  .dc  { color: #89ddff; }   /* decorator */
+  .cl  { color: #ff5370; }   /* class name */
+
+  /* File tree */
+  .filetree {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: monospace;
+    font-size: 13px;
+    color: #cdd3de;
+    line-height: 2;
+  }
+  .filetree .dir  { color: #82aaff; }
+  .filetree .file { color: #c3e88d; }
+  .filetree .note { color: #546e7a; }
+
+  /* Cheatsheet table */
+  .cheat-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .cheat-table td { padding: 8px 12px; border-bottom: 1px solid #2a2a2a; vertical-align: top; }
+  .cheat-table td:first-child { color: #82aaff; font-family: monospace; white-space: nowrap; font-size: 12.5px; width: 42%; }
+  .cheat-table td:last-child { color: #aaa; }
+  .cheat-table tr:last-child td { border-bottom: none; }
+
+  /* Scroll to top fab */
+  .fab {
+    position: fixed; bottom: 24px; right: 24px;
+    background: #333; border: 1px solid #555;
+    color: #aaa; width: 40px; height: 40px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 18px; z-index: 200;
+    transition: background 0.2s;
+  }
+  .fab:hover { background: #444; }
+
+  /* Day header */
+  .day-header {
+    padding: 16px 20px 4px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .day-header h1 { font-size: 20px; font-weight: 700; color: #f5f5f5; }
+  .day-header p  { font-size: 13px; color: #666; margin-top: 3px; }
+
+  .separator { height: 1px; background: #2a2a2a; margin: 6px 0; }
+  
+  /* Task cards */
+  .task-card {
+    background: #1c1c1c;
+    border: 1px solid #2e2e2e;
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .task-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 6px;
+    background: #2a2a2a; border: 1px solid #444;
+    font-size: 12px; font-weight: 700; color: #aaa;
+    margin-right: 8px; flex-shrink: 0;
+  }
+  .task-title { font-weight: 600; font-size: 14.5px; color: #f0f0f0; display: flex; align-items: center; margin-bottom: 8px; }
+  .task-desc  { font-size: 13.5px; color: #999; line-height: 1.6; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="day-header">
+  <h1>Day 4 — API Design: DTOs, Validation & Swagger</h1>
+  <p>class-validator · class-transformer · OpenAPI · Contracts Lib</p>
+</div>
+
+<div class="top-bar">
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="showTab('dtos')">DTOs</button>
+    <button class="tab-btn" onclick="showTab('validator')">class-validator</button>
+    <button class="tab-btn" onclick="showTab('transformer')">class-transformer</button>
+    <button class="tab-btn" onclick="showTab('swagger')">Swagger</button>
+    <button class="tab-btn" onclick="showTab('contracts')">API Contracts</button>
+    <button class="tab-btn" onclick="showTab('pagination')">Pagination</button>
+    <button class="tab-btn" onclick="showTab('versioning')">Versioning</button>
+    <button class="tab-btn" onclick="showTab('tasks')">Hands-on Tasks</button>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ========== DTOs ========== -->
+<div class="tab-panel active" id="tab-dtos">
+
+  <div class="card">
+    <span class="badge badge-theory">Theory</span>
+    <h2>DTO kya hota hai — aur kyun zaroori hai?</h2>
+    <div class="theory-list">
+      <p><strong>DTO (Data Transfer Object)</strong> → sirf ek plain class hai jo define karta hai "is request mein kya aana chahiye"</p>
+      <p><strong>Controller</strong> → req.body directly mat use karo, DTO inject karo</p>
+      <p><strong>Validation</strong> → DTO ke upar decorators lagate hain, NestJS automatically validate karta hai</p>
+      <p><strong>Type Safety</strong> → TypeScript types milti hain + runtime validation bhi</p>
+      <p><strong>Separation of Concerns</strong> → Entity alag, DTO alag — entity = DB shape, DTO = API shape</p>
+      <p><strong>Request DTO</strong> → CreateUserDto, UpdateUserDto (client se aata hai)</p>
+      <p><strong>Response DTO</strong> → UserResponseDto (client ko bhejte hain, sensitive fields exclude)</p>
+    </div>
+    <div class="callout">
+      <strong>Sochna aise:</strong> Entity = DB ka blueprint. DTO = API ka contract. Dono ko mix mat karo — ek din password field response mein leak ho jayegi 💀
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-file">File Structure</span>
+    <h2>Kahan kya hoga</h2>
+    <div class="filetree">
+<span class="dir">src/</span>
+├── <span class="dir">users/</span>
+│   ├── <span class="dir">dto/</span>
+│   │   ├── <span class="file">create-user.dto.ts</span>   <span class="note">← POST /users body</span>
+│   │   ├── <span class="file">update-user.dto.ts</span>   <span class="note">← PATCH /users/:id body</span>
+│   │   └── <span class="file">user-response.dto.ts</span> <span class="note">← response shape</span>
+│   ├── <span class="dir">entities/</span>
+│   │   └── <span class="file">user.entity.ts</span>       <span class="note">← DB table (alag rakho!)</span>
+│   └── <span class="file">users.controller.ts</span>
+├── <span class="dir">libs/</span>
+│   └── <span class="dir">api/</span>
+│       └── <span class="dir">contracts/</span>
+│           └── <span class="file">index.ts</span>          <span class="note">← shared DTOs (FE + BE dono use karte)</span>
+</div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-code">Code</span>
+    <h2>DTO kaise likhte hain</h2>
+    <div class="code-block"><span class="cm">// users/dto/create-user.dto.ts</span>
+<span class="kw">import</span> { IsString, IsEmail, IsOptional, MinLength, IsEnum } <span class="kw">from</span> <span class="str">'class-validator'</span>;
+<span class="kw">import</span> { ApiProperty, ApiPropertyOptional } <span class="kw">from</span> <span class="str">'@nestjs/swagger'</span>;
+
+<span class="kw">export</span> <span class="kw">enum</span> <span class="cl">UserRole</span> { ADMIN = <span class="str">'admin'</span>, USER = <span class="str">'user'</span> }
+
+<span class="kw">export class</span> <span class="cl">CreateUserDto</span> {
+  <span class="dc">@ApiProperty</span>({ example: <span class="str">'Priyanshu Singh'</span>, description: <span class="str">'Full name'</span> })
+  <span class="dc">@IsString</span>()
+  <span class="dc">@MinLength</span>(<span class="nm">2</span>)
+  name: <span class="ty">string</span>;
+
+  <span class="dc">@ApiProperty</span>({ example: <span class="str">'priyanshu@gmail.com'</span> })
+  <span class="dc">@IsEmail</span>()
+  email: <span class="ty">string</span>;
+
+  <span class="dc">@ApiProperty</span>({ minLength: <span class="nm">8</span> })
+  <span class="dc">@IsString</span>()
+  <span class="dc">@MinLength</span>(<span class="nm">8</span>)
+  password: <span class="ty">string</span>;
+
+  <span class="dc">@ApiPropertyOptional</span>({ enum: <span class="cl">UserRole</span>, default: <span class="cl">UserRole</span>.USER })
+  <span class="dc">@IsOptional</span>()
+  <span class="dc">@IsEnum</span>(<span class="cl">UserRole</span>)
+  role?: <span class="cl">UserRole</span>;
+}</div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-code">Code</span>
+    <h2>UpdateDto — PartialType trick 🔥</h2>
+    <div class="code-block"><span class="cm">// users/dto/update-user.dto.ts</span>
+<span class="kw">import</span> { PartialType } <span class="kw">from</span> <span class="str">'@nestjs/swagger'</span>;  <span class="cm">// swagger wala use karo, mapped-types nahi</span>
+<span class="kw">import</span> { <span class="cl">CreateUserDto</span> } <span class="kw">from</span> <span class="str">'./create-user.dto'</span>;
+
+<span class="kw">export class</span> <span class="cl">UpdateUserDto</span> <span class="kw">extends</span> PartialType(<span class="cl">CreateUserDto</span>) {}
+<span class="cm">// Sab fields optional ho gayi — ek line mein! Swagger bhi update ho gaya automatically</span></div>
+    <div class="callout callout-orange">
+      <strong>Gotcha:</strong> <code>PartialType</code> import karo <code>@nestjs/swagger</code> se — <code>@nestjs/mapped-types</code> se nahi. Warna Swagger docs mein fields nahi dikhenge.
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-tip">Setup</span>
+    <h2>ValidationPipe globally enable karo</h2>
+    <div class="code-block"><span class="cm">// main.ts — ye line nahi hai toh validation kuch nahi karega!</span>
+<span class="kw">async function</span> <span class="fn">bootstrap</span>() {
+  <span class="kw">const</span> app = <span class="kw">await</span> NestFactory.<span class="fn">create</span>(AppModule);
+  
+  app.<span class="fn">useGlobalPipes</span>(<span class="kw">new</span> <span class="cl">ValidationPipe</span>({
+    whitelist: <span class="kw">true</span>,        <span class="cm">// extra fields strip ho jaate hain</span>
+    forbidNonWhitelisted: <span class="kw">true</span>, <span class="cm">// extra fields pe error throw karta hai</span>
+    transform: <span class="kw">true</span>,          <span class="cm">// string → number/boolean auto convert</span>
+    transformOptions: {
+      enableImplicitConversion: <span class="kw">true</span>,
+    },
+  }));
+
+  <span class="kw">await</span> app.<span class="fn">listen</span>(<span class="nm">3000</span>);
+}</div>
+    <div class="callout callout-green">
+      <strong>whitelist: true</strong> → agar koi <code>isAdmin: true</code> extra field bheje toh strip ho jayega. Security ke liye must-have hai bhai.
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== class-validator ========== -->
+<div class="tab-panel" id="tab-validator">
+
+  <div class="card">
+    <span class="badge badge-theory">Theory</span>
+    <h2>class-validator — sabse important decorators</h2>
+    <div class="theory-list">
+      <p><strong>@IsString()</strong> → string hona chahiye</p>
+      <p><strong>@IsEmail()</strong> → valid email format check karta hai</p>
+      <p><strong>@IsEnum(MyEnum)</strong> → enum ke values mein se hona chahiye</p>
+      <p><strong>@IsOptional()</strong> → field missing ho toh skip karo validation</p>
+      <p><strong>@IsNotEmpty()</strong> → empty string allowed nahi</p>
+      <p><strong>@IsInt() / @IsNumber()</strong> → number type check</p>
+      <p><strong>@Min(n) / @Max(n)</strong> → numeric range</p>
+      <p><strong>@MinLength(n) / @MaxLength(n)</strong> → string length</p>
+      <p><strong>@IsBoolean()</strong> → true/false only</p>
+      <p><strong>@IsDate()</strong> → valid Date object</p>
+      <p><strong>@IsUUID()</strong> → UUID format check</p>
+      <p><strong>@IsArray()</strong> → array hona chahiye</p>
+      <p><strong>@ValidateNested()</strong> → nested object ke andar bhi validate karo</p>
+      <p><strong>@IsIn(['a','b'])</strong> → specific values mein se hona chahiye</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-code">Code</span>
+    <h2>Common patterns</h2>
+    <div class="code-block"><span class="cm">// Custom error messages</span>
+<span class="dc">@IsEmail</span>({}, { message: <span class="str">'Bhai valid email daal!'</span> })
+email: <span class="ty">string</span>;
+
+<span class="cm">// Multiple validators ek field pe</span>
+<span class="dc">@IsString</span>()
+<span class="dc">@MinLength</span>(<span class="nm">8</span>)
+<span class="dc">@MaxLength</span>(<span class="nm">50</span>)
+<span class="dc">@Matches</span>(<span class="str">/(?=.*[A-Z])(?=.*[0-9])/</span>, {
+  message: <span class="str">'Password mein ek uppercase aur ek number hona chahiye'</span>
+})
+password: <span class="ty">string</span>;
+
+<span class="cm">// Nested object validate karna</span>
+<span class="kw">export class</span> <span class="cl">AddressDto</span> {
+  <span class="dc">@IsString</span>() city: <span class="ty">string</span>;
+  <span class="dc">@IsString</span>() state: <span class="ty">string</span>;
+}
+
+<span class="kw">export class</span> <span class="cl">CreateUserDto</span> {
+  <span class="dc">@ValidateNested</span>()
+  <span class="dc">@Type</span>(() => <span class="cl">AddressDto</span>)        <span class="cm">// class-transformer @Type zaroori hai</span>
+  address: <span class="cl">AddressDto</span>;
+}
+
+<span class="cm">// Array of objects validate karna</span>
+<span class="dc">@IsArray</span>()
+<span class="dc">@ValidateNested</span>({ each: <span class="kw">true</span> })  <span class="cm">// each: true → har element validate karo</span>
+<span class="dc">@Type</span>(() => <span class="cl">ItemDto</span>)
+items: <span class="cl">ItemDto</span>[];</div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-tip">Custom Validator</span>
+    <h2>@IsFutureDate() — custom decorator banana</h2>
+    <div class="code-block"><span class="cm">// decorators/is-future-date.decorator.ts</span>
+<span class="kw">import</span> {
+  registerDecorator, ValidationOptions, ValidationArguments
+} <span class="kw">from</span> <span class="str">'class-validator'</span>;
+
+<span class="kw">export function</span> <span class="fn">IsFutureDate</span>(validationOptions?: ValidationOptions) {
+  <span class="kw">return function</span>(object: <span class="ty">Object</span>, propertyName: <span class="ty">string</span>) {
+    <span class="fn">registerDecorator</span>({
+      name: <span class="str">'isFutureDate'</span>,
+      target: object.constructor,
+      propertyName,
+      options: validationOptions,
+      validator: {
+        <span class="fn">validate</span>(value: <span class="kw">any</span>) {
+          <span class="kw">if</span> (!(value <span class="kw">instanceof</span> Date)) <span class="kw">return false</span>;
+          <span class="kw">return</span> value > <span class="kw">new</span> Date();  <span class="cm">// future mein honi chahiye</span>
+        },
+        <span class="fn">defaultMessage</span>(args: ValidationArguments) {
+          <span class="kw">return</span> <span class="str">`${args.property} future date honi chahiye!`</span>;
+        },
+      },
+    });
+  };
+}
+
+<span class="cm">// Use kaise karein</span>
+<span class="kw">export class</span> <span class="cl">CreateEventDto</span> {
+  <span class="dc">@IsFutureDate</span>()
+  <span class="dc">@Type</span>(() => Date)         <span class="cm">// string → Date convert karta hai</span>
+  scheduledAt: Date;
+}</div>
+    <div class="callout">
+      <strong>Test karna mat bhoolna:</strong> valid date, past date, aur non-date (string/null) — teeno cases cover karo unit test mein.
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== class-transformer ========== -->
+<div class="tab-panel" id="tab-transformer">
+
+  <div class="card">
+    <span class="badge badge-theory">Theory</span>
+    <h2>class-transformer — plain object ↔ class instance</h2>
+    <div class="theory-list">
+      <p><strong>@Type(() => SomeClass)</strong> → nested object ko class instance mein convert karo</p>
+      <p><strong>@Expose()</strong> → sirf ye field response mein include karo</p>
+      <p><strong>@Exclude()</strong> → ye field response se hata do (e.g. password)</p>
+      <p><strong>@Transform()</strong> → custom transformation function</p>
+      <p><strong>plainToInstance()</strong> → plain JSON → class instance (with @Expose/@Exclude applied)</p>
+      <p><strong>instanceToPlain()</strong> → class instance → plain object</p>
+      <p><strong>excludeExtraneousValues: true</strong> → sirf @Expose wale fields rakhta hai</p>
+    </div>
+    <div class="callout callout-orange">
+      <strong>Fail Fast Principle:</strong> validation boundary pe karo — controller mein, service ke andar nahi. Service ko assume karna chahiye ki data already valid hai.
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-code">Code</span>
+    <h2>Response DTO — password field hide karna</h2>
+    <div class="code-block"><span class="cm">// users/dto/user-response.dto.ts</span>
+<span class="kw">import</span> { Exclude, Expose } <span class="kw">from</span> <span class="str">'class-transformer'</span>;
+<span class="kw">import</span> { ApiProperty } <span class="kw">from</span> <span class="str">'@nestjs/swagger'</span>;
+
+<span class="kw">export class</span> <span class="cl">UserResponseDto</span> {
+  <span class="dc">@Expose</span>()
+  <span class="dc">@ApiProperty</span>()
+  id: <span class="ty">string</span>;
+
+  <span class="dc">@Expose</span>()
+  <span class="dc">@ApiProperty</span>()
+  name: <span class="ty">string</span>;
+
+  <span class="dc">@Expose</span>()
+  <span class="dc">@ApiProperty</span>()
+  email: <span class="ty">string</span>;
+
+  <span class="dc">@Exclude</span>()          <span class="cm">// password KABHI response mein nahi jayegi</span>
+  password: <span class="ty">string</span>;
+
+  <span class="kw">constructor</span>(partial: Partial<<span class="cl">UserResponseDto</span>>) {
+    Object.<span class="fn">assign</span>(<span class="kw">this</span>, partial);
+  }
+}
+
+<span class="cm">// Service mein use karna</span>
+<span class="kw">async</span> <span class="fn">findOne</span>(id: <span class="ty">string</span>): Promise<<span class="cl">UserResponseDto</span>> {
+  <span class="kw">const</span> user = <span class="kw">await</span> <span class="kw">this</span>.userRepo.<span class="fn">findOne</span>({ where: { id } });
+  <span class="kw">return</span> plainToInstance(<span class="cl">UserResponseDto</span>, user, {
+    excludeExtraneousValues: <span class="kw">true</span>,
+  });
+}</div>
+    <div class="callout callout-red">
+      <strong>ClassSerializerInterceptor</strong> se bhi ye ho sakta hai — but plainToInstance explicitly karna better control deta hai.
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-code">Code</span>
+    <h2>@Transform — custom value convert karna</h2>
+    <div class="code-block"><span class="kw">import</span> { Transform } <span class="kw">from</span> <span class="str">'class-transformer'</span>;
+
+<span class="kw">export class</span> <span class="cl">QueryDto</span> {
+  <span class="cm">// String "true"/"false" → boolean</span>
+  <span class="dc">@Transform</span>(({ value }) => value === <span class="str">'true'</span>)
+  <span class="dc">@IsBoolean</span>()
+  isActive: <span class="ty">boolean</span>;
+
+  <span class="cm">// String "5" → number 5</span>
+  <span class="dc">@Transform</span>(({ value }) => parseInt(value, <span class="nm">10</span>))
+  <span class="dc">@IsInt</span>()
+  page: <span class="ty">number</span>;
+
+  <span class="cm">// Trim whitespace from string</span>
+  <span class="dc">@Transform</span>(({ value }) => value?.trim())
+  <span class="dc">@IsString</span>()
+  search: <span class="ty">string</span>;
+}</div>
+  </div>
+
+</div>
+
+<!-- ========== Swagger ========== -->
+<div class="tab-panel" id="tab-swagger">
+
+  <div class="card">
+    <span class="badge badge-theory">Theory</span>
+    <h2>Swagger / OpenAPI — API docs auto-generate</h2>
+    <div class="theory-list">
+      <p><strong>@ApiTags('users')</strong> → controller ko ek group mein daalo Swagger UI mein</p>
+      <p><strong>@ApiOperation({ summary: '...' })</strong> → endpoint ka description</p>
+      <p><strong>@ApiResponse({ status: 200, type: UserDto })</strong> → response schema document karo</p>
+      <p><strong>@ApiProperty()</strong> → DTO field Swagger mein dikhao</p>
+      <p><strong>@ApiPropertyOptional()</strong> → optional field document karo</p>
+      <p><strong>@ApiBearerAuth()</strong> → JWT auth required hai ye batao</p>
+      <p><strong>@ApiQuery()</strong> → query params document karo</p>
+      <p><strong>@ApiParam()</strong> → URL params document karo</p>
+      <p><strong>@ApiBody()</strong> → request body manually specify karo</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-tip">Setup</span>
+    <h2>Swagger main.ts mein setup karna</h2>
+    <div class="code-block"><span class="cm">// main.ts</span>
+<span class="kw">import</span> { SwaggerModule, DocumentBuilder } <span class="kw">from</span> <span class="str">'@nestjs/swagger'</span>;
+
+<span class="kw">async function</span> <span class="fn">bootstrap</span>() {
+  <span class="kw">const</span> app = <span class="kw">await</span> NestFactory.<span class="fn">create</span>(AppModule);
+
+  <span class="cm">// Swagger config</span>
+  <span class="kw">const</span> config = <span class="kw">new</span> DocumentBuilder()
+    .<span class="fn">setTitle</span>(<span class="str">'My API'</span>)
+    .<span class="fn">setDescription</span>(<span class="str">'API documentation'</span>)
+    .<span class="fn">setVersion</span>(<span class="str">'1.0'</span>)
+    .<span class="fn">addBearerAuth</span>()          <span class="cm">// JWT auth button add karta hai Swagger UI mein</span>
+    .<span class="fn">build</span>();
+
+  <span class="kw">const</span> document = SwaggerModule.<span class="fn">createDocument</span>(app, config);
+  SwaggerModule.<span class="fn">setup</span>(<span class="str">'api/docs'</span>, app, document);
+  <span class="cm">// Ab /api/docs pe jao → full interactive docs!</span>
+
+  app.<span class="fn">useGlobalPipes</span>(<span class="kw">new</span> <span class="cl">ValidationPipe</span>({ whitelist: <span class="kw">true</span>, transform: <span class="kw">true</span> }));
+  <span class="kw">await</span> app.<span class="fn">listen</span>(<span class="nm">3000</span>);
+}</div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-code">Code</span>
+    <h2>Fully documented controller</h2>
+    <div class="code-block"><span class="dc">@ApiTags</span>(<span class="str">'users'</span>)
+<span class="dc">@ApiBearerAuth</span>()              <span class="cm">// lock icon dikhega Swagger mein</span>
+<span class="dc">@Controller</span>(<span class="str">'users'</span>)
+<span class="kw">export class</span> <span class="cl">UsersController</span> {
+
+  <span class="dc">@Post</span>()
+  <span class="dc">@ApiOperation</span>({ summary: <span class="str">'Naya user create karo'</span> })
+  <span class="dc">@ApiResponse</span>({ status: <span class="nm">201</span>, type: <span class="cl">UserResponseDto</span> })
+  <span class="dc">@ApiResponse</span>({ status: <span class="nm">400</span>, description: <span class="str">'Validation failed'</span> })
+  <span class="dc">@ApiResponse</span>({ status: <span class="nm">409</span>, description: <span class="str">'Email already exists'</span> })
+  <span class="fn">create</span>(<span class="dc">@Body</span>() dto: <span class="cl">CreateUserDto</span>) {
+    <span class="kw">return this</span>.usersService.<span class="fn">create</span>(dto);
+  }
+
+  <span class="dc">@Get</span>()
+  <span class="dc">@ApiOperation</span>({ summary: <span class="str">'Saare users lao'</span> })
+  <span class="dc">@ApiQuery</span>({ name: <span class="str">'page'</span>, required: <span class="kw">false</span>, type: <span class="ty">Number</span> })
+  <span class="dc">@ApiQuery</span>({ name: <span class="str">'limit'</span>, required: <span class="kw">false</span>, type: <span class="ty">Number</span> })
+  <span class="dc">@ApiResponse</span>({ status: <span class="nm">200</span>, type: [<span class="cl">UserResponseDto</span>] })
+  <span class="fn">findAll</span>(<span class="dc">@Query</span>() query: <span class="cl">PaginationDto</span>) {
+    <span class="kw">return this</span>.usersService.<span class="fn">findAll</span>(query);
+  }
+
+  <span class="dc">@Get</span>(<span class="str">':id'</span>)
+  <span class="dc">@ApiParam</span>({ name: <span class="str">'id'</span>, description: <span class="str">'User UUID'</span> })
+  <span class="dc">@ApiResponse</span>({ status: <span class="nm">200</span>, type: <span class="cl">UserResponseDto</span> })
+  <span class="dc">@ApiResponse</span>({ status: <span class="nm">404</span>, description: <span class="str">'User not found'</span> })
+  <span class="fn">findOne</span>(<span class="dc">@Param</span>(<span class="str">'id'</span>) id: <span class="ty">string</span>) {
+    <span class="kw">return this</span>.usersService.<span class="fn">findOne</span>(id);
+  }
+}</div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-cheat">Cheatsheet</span>
+    <h2>Swagger decorators quick reference</h2>
+    <table class="cheat-table">
+      <tr><td>@ApiTags('name')</td><td>Controller ke endpoints ek group mein</td></tr>
+      <tr><td>@ApiOperation({summary})</td><td>Endpoint ka ek line description</td></tr>
+      <tr><td>@ApiResponse({status, type})</td><td>Response document karo (ek endpoint pe multiple)</td></tr>
+      <tr><td>@ApiProperty()</td><td>DTO field Swagger schema mein include karo</td></tr>
+      <tr><td>@ApiPropertyOptional()</td><td>Optional field — @IsOptional ke saath use karo</td></tr>
+      <tr><td>@ApiBearerAuth()</td><td>JWT token required batao</td></tr>
+      <tr><td>@ApiQuery({name, type})</td><td>?page=1 type query params</td></tr>
+      <tr><td>@ApiParam({name})</td><td>:id type URL params</td></tr>
+      <tr><td>@ApiBody({type: Dto})</td><td>Request body manually specify karo</td></tr>
+      <tr><td>@ApiExcludeEndpoint()</td><td>Is endpoint ko docs mein mat dikhao</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========== Contracts ========== -->
+<div class="tab-panel" id="tab-contracts">
+
+  <div class="card">
+    <span class="badge badge-theory">Theory</span>
+    <h2>Shared API Contracts — FE + BE ek hi DTO use kare</h2>
+    <div class="theory-list">
+      <p><strong>Problem:</strong> FE aur BE mein same DTO alag-alag likhte hain → sync issues aate hain</p>
+      <p><strong>Solution:</strong> <code>libs/api/contracts/</code> mein shared DTOs rakho</p>
+      <p><strong>Monorepo</strong> (Nx/Turborepo) mein ye aasaan hai — same codebase share hoti hai</p>
+      <p><strong>Separate repos?</strong> → npm package publish karo ya git submodule use karo</p>
+      <p><strong>Benefit:</strong> Backend DTO update kiya → Frontend automatically TypeScript error deta hai</p>
+      <p><strong>Type safety end-to-end</strong> → runtime surprises drastically kam ho jaate hain</p>
+    </div>
+    <div class="callout">
+      <strong>Real world:</strong> tRPC ya OpenAPI generated clients bhi ye hi kaam karte hain — lekin manually shared DTOs simpler starting point hai.
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-file">File Structure</span>
+    <h2>Contracts lib structure</h2>
+    <div class="filetree">
+<span class="dir">libs/</span>
+└── <span class="dir">api/</span>
+    └── <span class="dir">contracts/</span>
+        ├── <span class="file">index.ts</span>                   <span class="note">← sab kuch yahan se export karo</span>
+        ├── <span class="dir">user/</span>
+        │   ├── <span class="file">create-user.dto.ts</span>
+        │   ├── <span class="file">update-user.dto.ts</span>
+        │   └── <span class="file">user-response.dto.ts</span>
+        └── <span class="dir">announcement/</span>
+            ├── <span class="file">create-announcement.dto.ts</span>
+            └── <span class="file">announcement-response.dto.ts</span>
+</div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-code">Code</span>
+    <h2>Contracts lib use karna</h2>
+    <div class="code-block"><span class="cm">// libs/api/contracts/index.ts — barrel export</span>
+<span class="kw">export</span> * <span class="kw">from</span> <span class="str">'./user/create-user.dto'</span>;
+<span class="kw">export</span> * <span class="kw">from</span> <span class="str">'./user/user-response.dto'</span>;
+<span class="kw">export</span> * <span class="kw">from</span> <span class="str">'./announcement/create-announcement.dto'</span>;
+<span class="kw">export</span> * <span class="kw">from</span> <span class="str">'./announcement/announcement-response.dto'</span>;
+
+<span class="cm">// ---- Backend (NestJS) mein use karna ----</span>
+<span class="kw">import</span> { <span class="cl">CreateAnnouncementDto</span> } <span class="kw">from</span> <span class="str">'@app/api/contracts'</span>;
+
+<span class="dc">@Post</span>(<span class="str">'announcements'</span>)
+<span class="fn">create</span>(<span class="dc">@Body</span>() dto: <span class="cl">CreateAnnouncementDto</span>) { ... }
+
+<span class="cm">// ---- Frontend (React/Next.js) mein use karna ----</span>
+<span class="kw">import</span> { <span class="cl">CreateAnnouncementDto</span> } <span class="kw">from</span> <span class="str">'@app/api/contracts'</span>;
+
+<span class="kw">const</span> <span class="fn">createAnnouncement</span> = <span class="kw">async</span> (data: <span class="cl">CreateAnnouncementDto</span>) => {
+  <span class="kw">return</span> fetch(<span class="str">'/api/announcements'</span>, {
+    method: <span class="str">'POST'</span>,
+    body: JSON.<span class="fn">stringify</span>(data),
+  });
+};</div>
+  </div>
+
+</div>
+
+<!-- ========== Pagination ========== -->
+<div class="tab-panel" id="tab-pagination">
+
+  <div class="card">
+    <span class="badge badge-theory">Theory</span>
+    <h2>Pagination — offset vs cursor</h2>
+    <div class="theory-list">
+      <p><strong>Offset-based:</strong> <code>?page=2&limit=10</code> → <code>OFFSET 10 LIMIT 10</code> — simple, familiar</p>
+      <p><strong>Cursor-based:</strong> <code>?cursor=xyz&limit=10</code> → last item ki ID se shuru karo — fast, consistent</p>
+      <p><strong>Offset problem:</strong> data insert ho toh same record dobara aa sakta hai ya skip ho sakta hai</p>
+      <p><strong>Cursor better kab:</strong> real-time data, infinite scroll, large datasets</p>
+      <p><strong>Offset better kab:</strong> admin panels, fixed pages, small datasets</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-code">Code</span>
+    <h2>Offset-based PaginationDto</h2>
+    <div class="code-block"><span class="cm">// common/dto/pagination.dto.ts</span>
+<span class="kw">import</span> { IsOptional, IsInt, Min, Max } <span class="kw">from</span> <span class="str">'class-validator'</span>;
+<span class="kw">import</span> { Transform } <span class="kw">from</span> <span class="str">'class-transformer'</span>;
+<span class="kw">import</span> { ApiPropertyOptional } <span class="kw">from</span> <span class="str">'@nestjs/swagger'</span>;
+
+<span class="kw">export class</span> <span class="cl">PaginationDto</span> {
+  <span class="dc">@ApiPropertyOptional</span>({ default: <span class="nm">1</span> })
+  <span class="dc">@IsOptional</span>()
+  <span class="dc">@Transform</span>(({ value }) => parseInt(value))
+  <span class="dc">@IsInt</span>()
+  <span class="dc">@Min</span>(<span class="nm">1</span>)
+  page: <span class="ty">number</span> = <span class="nm">1</span>;
+
+  <span class="dc">@ApiPropertyOptional</span>({ default: <span class="nm">10</span> })
+  <span class="dc">@IsOptional</span>()
+  <span class="dc">@Transform</span>(({ value }) => parseInt(value))
+  <span class="dc">@IsInt</span>()
+  <span class="dc">@Min</span>(<span class="nm">1</span>) <span class="dc">@Max</span>(<span class="nm">100</span>)
+  limit: <span class="ty">number</span> = <span class="nm">10</span>;
+
+  <span class="kw">get</span> <span class="fn">skip</span>(): <span class="ty">number</span> { <span class="kw">return</span> (<span class="kw">this</span>.page - <span class="nm">1</span>) * <span class="kw">this</span>.limit; }
+}
+
+<span class="cm">// Service mein use karna</span>
+<span class="kw">async</span> <span class="fn">findAll</span>(pagination: <span class="cl">PaginationDto</span>) {
+  <span class="kw">const</span> [data, total] = <span class="kw">await this</span>.repo.<span class="fn">findAndCount</span>({
+    skip: pagination.skip,
+    take: pagination.limit,
+  });
+  <span class="kw">return</span> { data, total, page: pagination.page, limit: pagination.limit };
+}</div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-code">Code</span>
+    <h2>Cursor-based PaginationDto</h2>
+    <div class="code-block"><span class="kw">export class</span> <span class="cl">CursorPaginationDto</span> {
+  <span class="dc">@ApiPropertyOptional</span>({ description: <span class="str">'Last item ka UUID'</span> })
+  <span class="dc">@IsOptional</span>()
+  <span class="dc">@IsUUID</span>()
+  cursor?: <span class="ty">string</span>;
+
+  <span class="dc">@ApiPropertyOptional</span>({ default: <span class="nm">10</span> })
+  <span class="dc">@IsOptional</span>()
+  <span class="dc">@Transform</span>(({ value }) => parseInt(value))
+  <span class="dc">@IsInt</span>()
+  <span class="dc">@Min</span>(<span class="nm">1</span>) <span class="dc">@Max</span>(<span class="nm">50</span>)
+  limit: <span class="ty">number</span> = <span class="nm">10</span>;
+}
+
+<span class="cm">// Service mein cursor query</span>
+<span class="kw">async</span> <span class="fn">findAll</span>({ cursor, limit }: <span class="cl">CursorPaginationDto</span>) {
+  <span class="kw">const</span> where = cursor ? { id: MoreThan(cursor) } : {};
+  <span class="kw">const</span> data = <span class="kw">await this</span>.repo.<span class="fn">find</span>({ where, take: limit + <span class="nm">1</span>, order: { id: <span class="str">'ASC'</span> } });
+  <span class="kw">const</span> hasMore = data.length > limit;
+  <span class="kw">if</span> (hasMore) data.pop();
+  <span class="kw">return</span> { data, nextCursor: hasMore ? data[data.length - <span class="nm">1</span>].id : <span class="kw">null</span> };
+}</div>
+  </div>
+
+</div>
+
+<!-- ========== Versioning ========== -->
+<div class="tab-panel" id="tab-versioning">
+
+  <div class="card">
+    <span class="badge badge-theory">Theory</span>
+    <h2>API Versioning — breaking changes handle karna</h2>
+    <div class="theory-list">
+      <p><strong>URI versioning:</strong> <code>/v1/users</code>, <code>/v2/users</code> — sabse common, visible, easy to test</p>
+      <p><strong>Header versioning:</strong> <code>Accept-Version: 2</code> — clean URLs lekin harder to test</p>
+      <p><strong>Query param:</strong> <code>?version=2</code> — simple lekin dirty URLs</p>
+      <p><strong>MediaType:</strong> <code>Accept: application/vnd.api.v2+json</code> — purist approach</p>
+      <p><strong>NestJS default:</strong> <code>VersioningType.URI</code> — prefer karo yahi</p>
+      <p><strong>Kab versioning karo:</strong> response shape change hoti ho, field remove ho, breaking change ho</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-code">Code</span>
+    <h2>URI Versioning setup</h2>
+    <div class="code-block"><span class="cm">// main.ts</span>
+<span class="kw">import</span> { VersioningType } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
+
+app.<span class="fn">enableVersioning</span>({
+  type: VersioningType.URI,        <span class="cm">// /v1/... /v2/...</span>
+  defaultVersion: <span class="str">'1'</span>,           <span class="cm">// version nahi diya toh v1 use karo</span>
+});
+
+<span class="cm">// ---- Controller level versioning ----</span>
+<span class="dc">@Controller</span>({ path: <span class="str">'users'</span>, version: <span class="str">'1'</span> })
+<span class="kw">export class</span> <span class="cl">UsersV1Controller</span> { <span class="cm">// /v1/users</span>
+  <span class="dc">@Get</span>()
+  <span class="fn">findAll</span>() { <span class="kw">return</span> { data: [], version: <span class="str">'v1'</span> }; }
+}
+
+<span class="dc">@Controller</span>({ path: <span class="str">'users'</span>, version: <span class="str">'2'</span> })
+<span class="kw">export class</span> <span class="cl">UsersV2Controller</span> { <span class="cm">// /v2/users — new response shape</span>
+  <span class="dc">@Get</span>()
+  <span class="fn">findAll</span>() { <span class="kw">return</span> { items: [], meta: { total: <span class="nm">0</span> }, version: <span class="str">'v2'</span> }; }
+}
+
+<span class="cm">// ---- Route level versioning ----</span>
+<span class="dc">@Controller</span>(<span class="str">'posts'</span>)
+<span class="kw">export class</span> <span class="cl">PostsController</span> {
+  <span class="dc">@Get</span>() <span class="dc">@Version</span>(<span class="str">'1'</span>)
+  <span class="fn">findAllV1</span>() { ... }
+
+  <span class="dc">@Get</span>() <span class="dc">@Version</span>(<span class="str">'2'</span>)
+  <span class="fn">findAllV2</span>() { ... }
+}</div>
+  </div>
+
+</div>
+
+<!-- ========== Hands-on Tasks ========== -->
+<div class="tab-panel" id="tab-tasks">
+
+  <div class="card">
+    <span class="badge badge-code">Hands-on Tasks</span>
+    <h2>Aaj karna kya hai</h2>
+
+    <div style="display:flex;flex-direction:column;gap:14px;margin-top:4px;">
+
+      <div class="task-card">
+        <div class="task-title"><span class="task-num">1</span>Full CRUD Module — Announcement</div>
+        <div class="task-desc">
+          Complete <code>Announcement</code> CRUD module banao — create/list/update/delete. Har endpoint pe full DTO validation + Swagger docs + bearer auth. Module structure: <code>src/announcements/dto/</code>, <code>entities/</code>, controller, service, module.
+        </div>
+        <div class="code-block" style="margin-top:12px;font-size:12px;"><span class="cm">// Announcement entity mein ye fields hone chahiye:</span>
+<span class="cm">// id (uuid), title (varchar), content (text),</span>
+<span class="cm">// isPublished (boolean, default false),</span>
+<span class="cm">// publishedAt (timestamp, nullable),</span>
+<span class="cm">// createdAt, updatedAt</span>
+
+<span class="cm">// CreateAnnouncementDto mein:</span>
+<span class="cm">// @IsString() @MinLength(5) title</span>
+<span class="cm">// @IsString() @MinLength(10) content</span>
+<span class="cm">// @IsOptional() @IsBoolean() isPublished</span>
+<span class="cm">// @IsOptional() @IsFutureDate() publishedAt</span></div>
+      </div>
+
+      <div class="task-card">
+        <div class="task-title"><span class="task-num">2</span>Contracts Lib DTO</div>
+        <div class="task-desc">
+          <code>CreateAnnouncementDto</code> aur <code>AnnouncementResponseDto</code> ko <code>libs/api/contracts/</code> mein move karo. Controller mein import karo. Ek mock frontend service file banao jo bhi same DTO import kare.
+        </div>
+        <div class="callout callout-green" style="margin-top:10px;">
+          Agar monorepo nahi hai toh: simply <code>src/common/contracts/</code> banao aur same pattern follow karo.
+        </div>
+      </div>
+
+      <div class="task-card">
+        <div class="task-title"><span class="task-num">3</span>Swagger Audit</div>
+        <div class="task-desc">
+          <code>/api/docs</code> open karo. Existing codebase mein 3 aisi endpoints dhundo jahan <code>@ApiResponse</code> ya <code>@ApiProperty</code> missing hai. Fix karo. Har endpoint pe minimum 3xx/4xx/5xx response document karo.
+        </div>
+        <div class="callout" style="margin-top:10px;">
+          Checklist: <code>@ApiOperation</code> ✓  <code>@ApiResponse(201/200)</code> ✓  <code>@ApiResponse(400)</code> ✓  <code>@ApiResponse(401)</code> ✓  <code>@ApiProperty</code> on all DTO fields ✓
+        </div>
+      </div>
+
+      <div class="task-card">
+        <div class="task-title"><span class="task-num">4</span>Custom @IsFutureDate() Validator + Unit Test</div>
+        <div class="task-desc">
+          <code>src/common/decorators/is-future-date.decorator.ts</code> mein custom validator likho. <code>CreateAnnouncementDto.publishedAt</code> pe use karo. Unit test likho covering:
+        </div>
+        <div class="code-block" style="margin-top:12px;font-size:12px;"><span class="cm">// Test cases jo cover karne hain:</span>
+<span class="cm">// ✅ Valid: new Date(Date.now() + 86400000)  → future date</span>
+<span class="cm">// ❌ Invalid: new Date('2020-01-01')         → past date</span>
+<span class="cm">// ❌ Invalid: 'not-a-date'                   → string input</span>
+<span class="cm">// ❌ Invalid: null / undefined               → non-date input</span>
+
+<span class="cm">// Jest se test karna:</span>
+<span class="kw">it</span>(<span class="str">'should reject past date'</span>, <span class="kw">async</span> () => {
+  <span class="kw">const</span> dto = plainToInstance(<span class="cl">CreateAnnouncementDto</span>, {
+    publishedAt: <span class="kw">new</span> Date(<span class="str">'2020-01-01'</span>)
+  });
+  <span class="kw">const</span> errors = <span class="kw">await</span> <span class="fn">validate</span>(dto);
+  expect(errors.length).<span class="fn">toBeGreaterThan</span>(<span class="nm">0</span>);
+});</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="badge badge-cheat">Quick Reference</span>
+    <h2>Day 4 — Kya kya yaad rakhna hai</h2>
+    <table class="cheat-table">
+      <tr><td>DTO vs Entity</td><td>Entity = DB shape. DTO = API shape. Dono ko mix mat karo</td></tr>
+      <tr><td>ValidationPipe</td><td>main.ts mein whitelist + transform = true globally set karo</td></tr>
+      <tr><td>PartialType</td><td>@nestjs/swagger se import karo, mapped-types se nahi</td></tr>
+      <tr><td>@Exclude()</td><td>Password jaise sensitive fields response DTO mein @Exclude karo</td></tr>
+      <tr><td>Fail Fast</td><td>Validation boundary pe (controller) — service ke andar nahi</td></tr>
+      <tr><td>Swagger setup</td><td>DocumentBuilder + SwaggerModule.setup('api/docs', ...) in main.ts</td></tr>
+      <tr><td>@ValidateNested</td><td>Nested DTO ke saath @Type(() => NestedClass) bhi lagana padega</td></tr>
+      <tr><td>URI Versioning</td><td>enableVersioning({type: VersioningType.URI}) in main.ts</td></tr>
+      <tr><td>Cursor > Offset</td><td>Real-time data / infinite scroll → cursor use karo</td></tr>
+      <tr><td>Custom validator</td><td>registerDecorator() se banao, unit test karo — 3 cases minimum</td></tr>
+    </table>
+  </div>
+
+  <div class="callout callout-orange" style="border-radius:8px;padding:14px 16px;">
+    <strong>Ab har tab mein teen cheezein hain bhai:</strong><br>
+    1. <strong>Theory</strong> → concept kya hai, kab use karo, kyu zaroori hai<br>
+    2. <strong>File Structure</strong> → exact folder/file kahan banegi<br>
+    3. <strong>Code</strong> → actual implementation<br><br>
+    Koi bhi topic confusing lage toh bol — aur deep dive karte hain! 🔥
+  </div>
+
+</div>
+
+</div><!-- /content -->
+
+<div class="fab" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+</script>
+</body>
+</html>
