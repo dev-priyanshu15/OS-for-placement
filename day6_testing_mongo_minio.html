@@ -1,0 +1,625 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-mono);background:transparent}
+.wrap{max-width:680px;margin:0 auto;padding:1rem 0}
+.day-badge{display:inline-flex;align-items:center;gap:8px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 14px;font-size:12px;color:var(--color-text-secondary);margin-bottom:1.5rem}
+.day-badge span{color:var(--color-text-primary);font-weight:500}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:1.5rem;border-bottom:0.5px solid var(--color-border-tertiary);padding-bottom:8px}
+.tab{padding:6px 14px;font-size:13px;border:0.5px solid transparent;border-radius:var(--border-radius-md);cursor:pointer;color:var(--color-text-secondary);background:transparent;transition:all .15s}
+.tab:hover{background:var(--color-background-secondary)}
+.tab.active{background:var(--color-background-secondary);border-color:var(--color-border-secondary);color:var(--color-text-primary)}
+.section{display:none}
+.section.active{display:block}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+.card-title{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card-body{font-size:13px;color:var(--color-text-secondary);line-height:1.7}
+.code-block{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 14px;font-family:var(--font-mono);font-size:12px;color:var(--color-text-primary);overflow-x:auto;margin:10px 0;line-height:1.6;white-space:pre}
+.kw{color:#7F77DD}.fn{color:#1D9E75}.str{color:#D85A30}.cmt{color:var(--color-text-tertiary)}.ht{color:#185FA5}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500}
+.badge-purple{background:#EEEDFE;color:#3C3489}.badge-teal{background:#E1F5EE;color:#085041}.badge-coral{background:#FAECE7;color:#712B13}.badge-blue{background:#E6F1FB;color:#0C447C}.badge-amber{background:#FAEEDA;color:#633806}
+.analogy-box{border-left:2px solid #7F77DD;padding:10px 14px;margin:10px 0;background:var(--color-background-secondary);border-radius:0 var(--border-radius-md) var(--border-radius-md) 0}
+.analogy-box .lbl{font-size:11px;color:#534AB7;font-weight:500;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.analogy-box p{font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.step-row{display:flex;gap:10px;align-items:flex-start;margin:8px 0}
+.step-num{min-width:22px;height:22px;border-radius:50%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--color-text-primary);flex-shrink:0;margin-top:2px}
+.step-content{font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.step-content strong{color:var(--color-text-primary);font-weight:500}
+.qa-item{margin:8px 0}
+.qa-q{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.qa-q:hover{color:#534AB7}
+.qa-a{font-size:13px;color:var(--color-text-secondary);line-height:1.6;display:none;padding:8px 0 0 12px;border-left:2px solid var(--color-border-secondary)}
+.qa-a.open{display:block}
+.flow-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:10px 0}
+.flow-box{font-size:12px;padding:4px 10px;border-radius:var(--border-radius-md);font-weight:500}
+.flow-arrow{color:var(--color-text-tertiary);font-size:14px}
+.coverage-bar{height:8px;border-radius:4px;background:var(--color-background-secondary);margin:6px 0;overflow:hidden}
+.coverage-fill{height:100%;border-radius:4px;transition:width .4s}
+.metric-row{display:flex;gap:8px;margin-bottom:1rem}
+.metric{flex:1;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px;text-align:center}
+.metric .val{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.metric .lbl{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">Day 6: Testing, MongoDB Audits and MinIO — interactive notes</h2>
+
+<div class="day-badge"><i class="ti ti-calendar" aria-hidden="true"></i> <span>Day 6</span> — Testing · Audit Logs · MinIO</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('unit')">🧪 Unit Testing</button>
+  <button class="tab" onclick="show('integration')">🔗 Integration Tests</button>
+  <button class="tab" onclick="show('audit')">📋 Audit Logs</button>
+  <button class="tab" onclick="show('minio')">🗄️ MinIO</button>
+  <button class="tab" onclick="show('tasks')">✅ Tasks</button>
+  <button class="tab" onclick="show('interview')">🎯 Interview Q&A</button>
+</div>
+
+<!-- UNIT TESTING -->
+<div id="sec-unit" class="section active">
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-flask" aria-hidden="true"></i> Unit testing kya hota hai?</div>
+  <div class="analogy-box">
+    <div class="lbl">Analogy</div>
+    <p>Socho tumhare ghar ki kitchen hai. <strong>Unit test</strong> matlab — sirf ek chef ka kaam check karo (kya usne correctly onion kata?), baaki sab — stove, fridge, dusre chef — <strong>nakli (mock)</strong> karo. Ek function, ek responsibility, ek test.</p>
+  </div>
+  <div class="card-body">
+    NestJS mein <code>TestingModule</code> use karte ho ek isolated testing environment banane ke liye. Saari dependencies (<code>Repository</code>, <code>ConfigService</code>) ko <strong>mock</strong> karte ho with <code>jest.fn()</code>.
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-code" aria-hidden="true"></i> TestingModule setup</div>
+<div class="code-block"><span class="cmt">// announcement.service.spec.ts</span>
+<span class="kw">import</span> { Test, TestingModule } <span class="kw">from</span> <span class="str">'@nestjs/testing'</span>;
+<span class="kw">import</span> { AnnouncementService } <span class="kw">from</span> <span class="str">'./announcement.service'</span>;
+<span class="kw">import</span> { getRepositoryToken } <span class="kw">from</span> <span class="str">'@nestjs/typeorm'</span>;
+<span class="kw">import</span> { Announcement } <span class="kw">from</span> <span class="str">'./announcement.entity'</span>;
+
+<span class="fn">describe</span>(<span class="str">'AnnouncementService'</span>, () => {
+  <span class="kw">let</span> service: AnnouncementService;
+  <span class="kw">let</span> mockRepo: <span class="kw">any</span>;
+
+  <span class="fn">beforeEach</span>(<span class="kw">async</span> () => {
+    <span class="cmt">// Mock sab karo — database touch nahi hoga</span>
+    mockRepo = {
+      <span class="fn">find</span>: jest.<span class="fn">fn</span>(),
+      <span class="fn">findOne</span>: jest.<span class="fn">fn</span>(),
+      <span class="fn">save</span>: jest.<span class="fn">fn</span>(),
+      <span class="fn">delete</span>: jest.<span class="fn">fn</span>(),
+      <span class="fn">create</span>: jest.<span class="fn">fn</span>(),
+    };
+
+    <span class="kw">const</span> module: TestingModule = <span class="kw">await</span> Test.<span class="fn">createTestingModule</span>({
+      providers: [
+        AnnouncementService,
+        {
+          <span class="cmt">// Real repo ki jagah mock provide karo</span>
+          provide: <span class="fn">getRepositoryToken</span>(Announcement),
+          useValue: mockRepo,
+        },
+      ],
+    }).<span class="fn">compile</span>();
+
+    service = module.<span class="fn">get</span>&lt;AnnouncementService&gt;(AnnouncementService);
+  });
+});</div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-test-pipe" aria-hidden="true"></i> Test cases likhna</div>
+<div class="code-block"><span class="fn">describe</span>(<span class="str">'findAll'</span>, () => {
+  <span class="fn">it</span>(<span class="str">'should return array of announcements'</span>, <span class="kw">async</span> () => {
+    <span class="kw">const</span> result = [{ id: 1, title: <span class="str">'Test'</span> }];
+    <span class="cmt">// Mock ka behavior define karo</span>
+    mockRepo.find.<span class="fn">mockResolvedValue</span>(result);
+
+    <span class="fn">expect</span>(<span class="kw">await</span> service.<span class="fn">findAll</span>()).<span class="fn">toEqual</span>(result);
+    <span class="fn">expect</span>(mockRepo.find).<span class="fn">toHaveBeenCalledTimes</span>(1);
+  });
+});
+
+<span class="fn">describe</span>(<span class="str">'findOne'</span>, () => {
+  <span class="fn">it</span>(<span class="str">'should throw NotFoundException for invalid id'</span>, <span class="kw">async</span> () => {
+    mockRepo.findOne.<span class="fn">mockResolvedValue</span>(<span class="kw">null</span>);
+
+    <span class="kw">await</span> <span class="fn">expect</span>(service.<span class="fn">findOne</span>(999))
+      .<span class="fn">rejects</span>
+      .<span class="fn">toThrow</span>(NotFoundException);
+  });
+
+  <span class="fn">it</span>(<span class="str">'should return announcement if found'</span>, <span class="kw">async</span> () => {
+    <span class="kw">const</span> ann = { id: 1, title: <span class="str">'Hello'</span> };
+    mockRepo.findOne.<span class="fn">mockResolvedValue</span>(ann);
+
+    <span class="fn">expect</span>(<span class="kw">await</span> service.<span class="fn">findOne</span>(1)).<span class="fn">toEqual</span>(ann);
+  });
+});</div>
+  <div class="card-body" style="margin-top:10px">
+    <strong>Coverage check:</strong> <code>nx test announcement --coverage</code><br>
+    Target: <span class="badge badge-teal">80%+ per module</span>
+    <div class="coverage-bar"><div class="coverage-fill" id="cov-bar" style="width:0%;background:#1D9E75"></div></div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:4px">Click to simulate: <button onclick="animateCov()" style="font-size:12px;padding:2px 8px;margin-left:6px">Run tests ▶</button> <span id="cov-label"></span></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-bulb" aria-hidden="true"></i> Key concepts recap</div>
+  <div class="step-row"><div class="step-num">1</div><div class="step-content"><strong>jest.fn()</strong> — ek dummy function jiska behavior tum control karte ho</div></div>
+  <div class="step-row"><div class="step-num">2</div><div class="step-content"><strong>mockResolvedValue(x)</strong> — async function x return kare</div></div>
+  <div class="step-row"><div class="step-num">3</div><div class="step-content"><strong>toHaveBeenCalledWith(args)</strong> — verify karo function correct args se call hua</div></div>
+  <div class="step-row"><div class="step-num">4</div><div class="step-content"><strong>beforeEach</strong> — har test se pehle fresh mock banao (state leak prevent karo)</div></div>
+  <div class="step-row"><div class="step-num">5</div><div class="step-content"><strong>rejects.toThrow</strong> — async errors test karo</div></div>
+</div>
+</div>
+
+<!-- INTEGRATION TESTING -->
+<div id="sec-integration" class="section">
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-topology-ring" aria-hidden="true"></i> Integration testing vs Unit testing</div>
+  <div class="analogy-box">
+    <div class="lbl">Analogy</div>
+    <p>Unit test = chef ka kaam check karo akele. Integration test = poora restaurant check karo — waiter order leta hai, chef banata hai, kya plate sahi dish ke saath aaya? <strong>HTTP request se lekar response tak</strong> — sab test hota hai.</p>
+  </div>
+  <div class="flow-row">
+    <div class="flow-box" style="background:#E1F5EE;color:#085041">HTTP Request</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="background:#EEEDFE;color:#3C3489">Controller</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="background:#EEEDFE;color:#3C3489">Service</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="background:#E6F1FB;color:#0C447C">DB (test)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="background:#E1F5EE;color:#085041">Response</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-code" aria-hidden="true"></i> Supertest setup with NestJS</div>
+<div class="code-block"><span class="cmt">// announcement.controller.spec.ts</span>
+<span class="kw">import</span> * <span class="kw">as</span> request <span class="kw">from</span> <span class="str">'supertest'</span>;
+<span class="kw">import</span> { Test } <span class="kw">from</span> <span class="str">'@nestjs/testing'</span>;
+<span class="kw">import</span> { INestApplication, ValidationPipe } <span class="kw">from</span> <span class="str">'@nestjs/common'</span>;
+<span class="kw">import</span> { AppModule } <span class="kw">from</span> <span class="str">'../app.module'</span>;
+
+<span class="fn">describe</span>(<span class="str">'AnnouncementController (e2e)'</span>, () => {
+  <span class="kw">let</span> app: INestApplication;
+  <span class="kw">let</span> authToken: <span class="kw">string</span>;
+
+  <span class="fn">beforeAll</span>(<span class="kw">async</span> () => {
+    <span class="kw">const</span> moduleRef = <span class="kw">await</span> Test.<span class="fn">createTestingModule</span>({
+      imports: [AppModule], <span class="cmt">// Test DB use hoga (.env.test)</span>
+    }).<span class="fn">compile</span>();
+
+    app = moduleRef.<span class="fn">createNestApplication</span>();
+    app.<span class="fn">useGlobalPipes</span>(<span class="kw">new</span> <span class="fn">ValidationPipe</span>({ whitelist: <span class="kw">true</span> }));
+    <span class="kw">await</span> app.<span class="fn">init</span>();
+
+    <span class="cmt">// Login karke JWT lo</span>
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">request</span>(app.<span class="fn">getHttpServer</span>())
+      .<span class="fn">post</span>(<span class="str">'/auth/login'</span>)
+      .<span class="fn">send</span>({ email: <span class="str">'test@test.com'</span>, password: <span class="str">'Test1234!'</span> });
+    authToken = res.body.access_token;
+  });
+
+  <span class="fn">afterAll</span>(<span class="kw">async</span> () => <span class="kw">await</span> app.<span class="fn">close</span>());
+});</div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-test-pipe" aria-hidden="true"></i> CRUD + edge case tests</div>
+<div class="code-block"><span class="cmt">// Happy path + Validation + Auth — teeno test karo</span>
+
+<span class="fn">it</span>(<span class="str">'GET /announcements — returns list'</span>, () => {
+  <span class="kw">return</span> <span class="fn">request</span>(app.<span class="fn">getHttpServer</span>())
+    .<span class="fn">get</span>(<span class="str">'/announcements'</span>)
+    .<span class="fn">set</span>(<span class="str">'Authorization'</span>, <span class="str">`Bearer ${authToken}`</span>)
+    .<span class="fn">expect</span>(200)
+    .<span class="fn">expect</span>((res) => {
+      <span class="fn">expect</span>(Array.<span class="fn">isArray</span>(res.body)).<span class="fn">toBe</span>(<span class="kw">true</span>);
+    });
+});
+
+<span class="fn">it</span>(<span class="str">'POST /announcements — 401 without token'</span>, () => {
+  <span class="kw">return</span> <span class="fn">request</span>(app.<span class="fn">getHttpServer</span>())
+    .<span class="fn">post</span>(<span class="str">'/announcements'</span>)
+    .<span class="fn">send</span>({ title: <span class="str">'Test'</span> })
+    .<span class="fn">expect</span>(401); <span class="cmt">// Auth guard kaam kar raha hai na?</span>
+});
+
+<span class="fn">it</span>(<span class="str">'POST /announcements — 400 on bad payload'</span>, () => {
+  <span class="kw">return</span> <span class="fn">request</span>(app.<span class="fn">getHttpServer</span>())
+    .<span class="fn">post</span>(<span class="str">'/announcements'</span>)
+    .<span class="fn">set</span>(<span class="str">'Authorization'</span>, <span class="str">`Bearer ${authToken}`</span>)
+    .<span class="fn">send</span>({}) <span class="cmt">// title missing!</span>
+    .<span class="fn">expect</span>(400);
+});
+
+<span class="fn">it</span>(<span class="str">'DELETE /announcements/:id — 404 for missing'</span>, () => {
+  <span class="kw">return</span> <span class="fn">request</span>(app.<span class="fn">getHttpServer</span>())
+    .<span class="fn">delete</span>(<span class="str">'/announcements/99999'</span>)
+    .<span class="fn">set</span>(<span class="str">'Authorization'</span>, <span class="str">`Bearer ${authToken}`</span>)
+    .<span class="fn">expect</span>(404);
+});</div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-circle-check" aria-hidden="true"></i> Test checklist for each endpoint</div>
+  <div class="step-row"><div class="step-num">✓</div><div class="step-content"><strong>Happy path</strong> — sahi data, 200/201 response</div></div>
+  <div class="step-row"><div class="step-num">✓</div><div class="step-content"><strong>401 Unauthorized</strong> — bina token ke request</div></div>
+  <div class="step-row"><div class="step-num">✓</div><div class="step-content"><strong>400 Validation error</strong> — missing/invalid fields</div></div>
+  <div class="step-row"><div class="step-num">✓</div><div class="step-content"><strong>404 Not found</strong> — invalid ID</div></div>
+  <div class="step-row"><div class="step-num">✓</div><div class="step-content"><strong>403 Forbidden</strong> — wrong role (agar RBAC hai)</div></div>
+</div>
+</div>
+
+<!-- AUDIT LOGS -->
+<div id="sec-audit" class="section">
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Audit logs kya hote hain?</div>
+  <div class="analogy-box">
+    <div class="lbl">Analogy</div>
+    <p>Bank ka ledger — har transaction record hota hai. Kaun, kab, kya kiya. Agar koi system hack ho ya bug aaye — <strong>audit trail</strong> se pata chalta hai exactly kya hua. Production systems mein <strong>mandatory</strong> hota hai.</p>
+  </div>
+  <div class="card-body">
+    Architecture: <strong>AuditInterceptor</strong> → RabbitMQ event publish → Consumer service → MongoDB save
+  </div>
+  <div class="flow-row" style="margin-top:10px">
+    <div class="flow-box" style="background:#EEEDFE;color:#3C3489">Request</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="background:#FAECE7;color:#712B13">Interceptor</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="background:#FAEEDA;color:#633806">RabbitMQ</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="background:#E6F1FB;color:#0C447C">Consumer</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="background:#E1F5EE;color:#085041">MongoDB</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-database" aria-hidden="true"></i> MongoDB Audit Schema + TTL Index</div>
+<div class="code-block"><span class="cmt">// audit-log.schema.ts (Mongoose)</span>
+<span class="kw">import</span> { Prop, Schema, SchemaFactory } <span class="kw">from</span> <span class="str">'@nestjs/mongoose'</span>;
+
+<span class="fn">@Schema</span>({ timestamps: <span class="kw">true</span> })
+<span class="kw">export class</span> AuditLog {
+  <span class="fn">@Prop</span>({ required: <span class="kw">true</span> })
+  userId: <span class="kw">string</span>;
+
+  <span class="fn">@Prop</span>({ required: <span class="kw">true</span> })
+  action: <span class="kw">string</span>; <span class="cmt">// 'CREATE' | 'UPDATE' | 'DELETE'</span>
+
+  <span class="fn">@Prop</span>({ required: <span class="kw">true</span> })
+  entity: <span class="kw">string</span>; <span class="cmt">// 'Announcement', 'User', etc.</span>
+
+  <span class="fn">@Prop</span>()
+  entityId: <span class="kw">string</span>;
+
+  <span class="fn">@Prop</span>({ type: Object })
+  metadata: Record&lt;<span class="kw">string</span>, <span class="kw">any</span>&gt;;
+
+  <span class="fn">@Prop</span>({ default: Date.<span class="fn">now</span> })
+  timestamp: Date;
+}
+
+<span class="kw">export const</span> AuditLogSchema = SchemaFactory.<span class="fn">createForClass</span>(AuditLog);
+
+<span class="cmt">// TTL Index — 90 din baad auto-delete (compliance!)</span>
+AuditLogSchema.<span class="fn">index</span>(
+  { createdAt: 1 },
+  { expireAfterSeconds: 90 * 24 * 60 * 60 }
+);</div>
+  <div class="card-body" style="margin-top:8px">
+    <span class="badge badge-coral">TTL Index</span> = MongoDB ka auto-cleanup feature. 90 din baad purane logs automatically delete. Storage cost control hoti hai + compliance rules follow hoti hain.
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-shield-lock" aria-hidden="true"></i> AuditInterceptor implementation</div>
+<div class="code-block"><span class="cmt">// audit.interceptor.ts</span>
+<span class="fn">@Injectable</span>()
+<span class="kw">export class</span> AuditInterceptor <span class="kw">implements</span> NestInterceptor {
+  <span class="fn">constructor</span>(
+    <span class="fn">@InjectQueue</span>(<span class="str">'audit'</span>) <span class="kw">private</span> auditQueue: Queue,
+  ) {}
+
+  <span class="fn">intercept</span>(ctx: ExecutionContext, next: CallHandler): Observable&lt;<span class="kw">any</span>&gt; {
+    <span class="kw">const</span> req = ctx.<span class="fn">switchToHttp</span>().<span class="fn">getRequest</span>();
+    <span class="kw">const</span> methodMap = {
+      POST: <span class="str">'CREATE'</span>, PUT: <span class="str">'UPDATE'</span>,
+      PATCH: <span class="str">'UPDATE'</span>, DELETE: <span class="str">'DELETE'</span>
+    };
+
+    <span class="kw">return</span> next.<span class="fn">handle</span>().<span class="fn">pipe</span>(
+      <span class="fn">tap</span>(<span class="kw">async</span> (responseData) => {
+        <span class="kw">const</span> action = methodMap[req.method];
+        <span class="kw">if</span> (!action) <span class="kw">return</span>; <span class="cmt">// GET skip karo</span>
+
+        <span class="kw">await</span> <span class="kw">this</span>.auditQueue.<span class="fn">add</span>(<span class="str">'log'</span>, {
+          userId: req.user?.id,
+          action,
+          entity: <span class="str">'Announcement'</span>,
+          entityId: responseData?.id,
+          metadata: { body: req.body },
+          timestamp: <span class="kw">new</span> Date(),
+        });
+      }),
+    );
+  }
+}
+
+<span class="cmt">// Controller pe use karo</span>
+<span class="fn">@UseInterceptors</span>(AuditInterceptor)
+<span class="fn">@Controller</span>(<span class="str">'announcements'</span>)
+<span class="kw">export class</span> AnnouncementController { <span class="cmt">/* ... */</span> }</div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-player-play" aria-hidden="true"></i> Bull Queue Consumer</div>
+<div class="code-block"><span class="cmt">// audit.processor.ts</span>
+<span class="fn">@Processor</span>(<span class="str">'audit'</span>)
+<span class="kw">export class</span> AuditProcessor {
+  <span class="fn">constructor</span>(
+    <span class="fn">@InjectModel</span>(AuditLog.name) <span class="kw">private</span> auditModel: Model&lt;AuditLog&gt;,
+  ) {}
+
+  <span class="fn">@Process</span>(<span class="str">'log'</span>)
+  <span class="kw">async</span> <span class="fn">handleAudit</span>(job: Job) {
+    <span class="kw">await</span> <span class="kw">this</span>.auditModel.<span class="fn">create</span>(job.data);
+    <span class="cmt">// MongoDB mein save ho gaya! 🎉</span>
+  }
+}</div>
+  <div class="card-body" style="margin-top:8px">
+    <span class="badge badge-amber">Why RabbitMQ?</span> API response block nahi hoga. Audit log async save hoga background mein. Performance hit nahi aayega user ko.
+  </div>
+</div>
+</div>
+
+<!-- MINIO -->
+<div id="sec-minio" class="section">
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-bucket" aria-hidden="true"></i> MinIO kya hai?</div>
+  <div class="analogy-box">
+    <div class="lbl">Analogy</div>
+    <p>MinIO = <strong>self-hosted AWS S3</strong>. Ek object storage server jo tumhare apne machine/server pe chalega. Files store karo — images, PDFs, videos — sab. Interview mein bolna: "S3-compatible API with self-hosted deployment."</p>
+  </div>
+  <div class="card-body" style="margin-top:10px">
+    <div class="metric-row">
+      <div class="metric"><div class="val">S3</div><div class="lbl">Compatible API</div></div>
+      <div class="metric"><div class="val">∞</div><div class="lbl">Scalable storage</div></div>
+      <div class="metric"><div class="val">🔒</div><div class="lbl">Presigned URLs</div></div>
+      <div class="metric"><div class="val">🏠</div><div class="lbl">Self-hosted</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-code" aria-hidden="true"></i> MinIO setup + FileService</div>
+<div class="code-block"><span class="cmt">// file.service.ts</span>
+<span class="kw">import</span> * <span class="kw">as</span> Minio <span class="kw">from</span> <span class="str">'minio'</span>;
+
+<span class="fn">@Injectable</span>()
+<span class="kw">export class</span> FileService {
+  <span class="kw">private</span> client: Minio.Client;
+  <span class="kw">private</span> bucket = <span class="str">'announcements'</span>;
+
+  <span class="fn">constructor</span>(<span class="kw">private</span> config: ConfigService) {
+    <span class="kw">this</span>.client = <span class="kw">new</span> Minio.<span class="fn">Client</span>({
+      endPoint: config.<span class="fn">get</span>(<span class="str">'MINIO_ENDPOINT'</span>),
+      port: +config.<span class="fn">get</span>(<span class="str">'MINIO_PORT'</span>),
+      useSSL: <span class="kw">false</span>,
+      accessKey: config.<span class="fn">get</span>(<span class="str">'MINIO_ACCESS_KEY'</span>),
+      secretKey: config.<span class="fn">get</span>(<span class="str">'MINIO_SECRET_KEY'</span>),
+    });
+  }
+
+  <span class="kw">async</span> <span class="fn">uploadFile</span>(file: Express.Multer.File): Promise&lt;<span class="kw">string</span>&gt; {
+    <span class="cmt">// Unique filename — collision prevent karo</span>
+    <span class="kw">const</span> filename = <span class="str">`${Date.now()}-${file.originalname}`</span>;
+
+    <span class="kw">await</span> <span class="kw">this</span>.client.<span class="fn">putObject</span>(
+      <span class="kw">this</span>.bucket,
+      filename,
+      file.buffer,
+      file.size,
+      { <span class="str">'Content-Type'</span>: file.mimetype }
+    );
+
+    <span class="cmt">// URL return karo (Postgres mein store hoga)</span>
+    <span class="kw">return</span> <span class="str">`http://${endpoint}/${this.bucket}/${filename}`</span>;
+  }
+
+  <span class="kw">async</span> <span class="fn">getPresignedUrl</span>(filename: <span class="kw">string</span>): Promise&lt;<span class="kw">string</span>&gt; {
+    <span class="cmt">// 1 ghante ke liye valid temporary URL</span>
+    <span class="kw">return</span> <span class="kw">this</span>.client.<span class="fn">presignedGetObject</span>(
+      <span class="kw">this</span>.bucket, filename, 3600
+    );
+  }
+}</div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-upload" aria-hidden="true"></i> File upload endpoint</div>
+<div class="code-block"><span class="cmt">// announcement.controller.ts</span>
+<span class="fn">@Post</span>(<span class="str">'/:id/attachment'</span>)
+<span class="fn">@UseGuards</span>(JwtAuthGuard)
+<span class="fn">@UseInterceptors</span>(<span class="fn">FileInterceptor</span>(<span class="str">'file'</span>))
+<span class="kw">async</span> <span class="fn">uploadAttachment</span>(
+  <span class="fn">@Param</span>(<span class="str">'id'</span>) id: <span class="kw">number</span>,
+  <span class="fn">@UploadedFile</span>() file: Express.Multer.File,
+) {
+  <span class="cmt">// MinIO pe upload karo</span>
+  <span class="kw">const</span> url = <span class="kw">await</span> <span class="kw">this</span>.fileService.<span class="fn">uploadFile</span>(file);
+
+  <span class="cmt">// Postgres mein sirf URL store karo — never local path!</span>
+  <span class="kw">return</span> <span class="kw">this</span>.announcementService.<span class="fn">addAttachment</span>(id, url);
+}
+
+<span class="cmt">// module mein MulterModule configure karo</span>
+MulterModule.<span class="fn">register</span>({
+  storage: memoryStorage(), <span class="cmt">// disk pe mat rakho, buffer use karo</span>
+  limits: { fileSize: 10 * 1024 * 1024 }, <span class="cmt">// 10MB max</span>
+})</div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-link" aria-hidden="true"></i> Presigned URLs kya hote hain?</div>
+  <div class="card-body">
+    <div class="step-row"><div class="step-num">1</div><div class="step-content">File bucket mein hai — <strong>private</strong> (public internet se access nahi)</div></div>
+    <div class="step-row"><div class="step-num">2</div><div class="step-content">User jab download kare — server ek <strong>temporary signed URL</strong> generate karo</div></div>
+    <div class="step-row"><div class="step-num">3</div><div class="step-content">URL 1 ghante baad expire — <strong>security</strong> maintain hoti hai</div></div>
+    <div class="step-row"><div class="step-num">4</div><div class="step-content">User directly MinIO se download kare — <strong>server load nahi</strong> pada</div></div>
+  </div>
+  <div class="analogy-box" style="margin-top:10px">
+    <div class="lbl">Interview answer</div>
+    <p>"Presigned URLs allow temporary, time-limited access to private objects without exposing credentials or routing traffic through the application server."</p>
+  </div>
+</div>
+</div>
+
+<!-- TASKS -->
+<div id="sec-tasks" class="section">
+<div class="card">
+  <div class="card-title"><i class="ti ti-list-check" aria-hidden="true"></i> Task 1: AnnouncementService Unit Tests</div>
+  <div class="card-body" style="line-height:2">
+    <span class="badge badge-teal">File:</span> <code>announcement.service.spec.ts</code><br>
+    → findAll, findOne, create, update, remove — sabke tests likho<br>
+    → NotFoundException cases cover karo<br>
+    → <code>nx test announcement --coverage</code> run karo<br>
+    → 80%+ coverage hona chahiye
+  </div>
+</div>
+<div class="card">
+  <div class="card-title"><i class="ti ti-list-check" aria-hidden="true"></i> Task 2: Controller Integration Tests</div>
+  <div class="card-body" style="line-height:2">
+    <span class="badge badge-blue">File:</span> <code>announcement.e2e-spec.ts</code><br>
+    → 4 endpoints × 3 cases (happy/401/400) = 12+ tests<br>
+    → Test DB use karo (<code>.env.test</code>)<br>
+    → <code>beforeAll</code> mein login karo, token store karo<br>
+    → <code>afterAll</code> mein app close karo
+  </div>
+</div>
+<div class="card">
+  <div class="card-title"><i class="ti ti-list-check" aria-hidden="true"></i> Task 3: Audit Log Pipeline</div>
+  <div class="card-body" style="line-height:2">
+    <span class="badge badge-purple">Files:</span> <code>audit.interceptor.ts</code>, <code>audit.schema.ts</code>, <code>audit.processor.ts</code><br>
+    → MongoDB connection add karo (<code>MongooseModule</code>)<br>
+    → Bull Queue <code>'audit'</code> setup karo<br>
+    → AuditInterceptor globally ya per-controller apply karo<br>
+    → MongoDB Compass se verify karo records aa rahe hain
+  </div>
+</div>
+<div class="card">
+  <div class="card-title"><i class="ti ti-list-check" aria-hidden="true"></i> Task 4: File Upload Endpoint</div>
+  <div class="card-body" style="line-height:2">
+    <span class="badge badge-amber">Files:</span> <code>file.service.ts</code>, <code>announcement.controller.ts</code><br>
+    → MinIO Docker container start karo<br>
+    → Bucket create karo (<code>'announcements'</code>)<br>
+    → <code>POST /announcements/:id/attachment</code> implement karo<br>
+    → Postman se test karo (multipart/form-data)<br>
+    → Postgres mein sirf URL store — local path nahi!
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-terminal-2" aria-hidden="true"></i> Quick commands</div>
+<div class="code-block"><span class="cmt"># MinIO Docker start karo</span>
+docker run -p 9000:9000 -p 9001:9001 \
+  -e MINIO_ROOT_USER=admin \
+  -e MINIO_ROOT_PASSWORD=password123 \
+  quay.io/minio/minio server /data --console-address ":9001"
+
+<span class="cmt"># MongoDB local</span>
+docker run -d -p 27017:27017 --name mongo mongo:7
+
+<span class="cmt"># Tests run karo</span>
+nx test announcement --coverage
+nx e2e announcement-e2e</div>
+</div>
+</div>
+
+<!-- INTERVIEW Q&A -->
+<div id="sec-interview" class="section">
+<div class="card">
+  <div class="card-title"><i class="ti ti-message-question" aria-hidden="true"></i> Top interview questions — Day 6</div>
+
+  <div class="qa-item">
+    <div class="qa-q" onclick="toggleQA(this)">Q1: Unit test aur integration test mein kya fark hai? <i class="ti ti-chevron-down" aria-hidden="true"></i></div>
+    <div class="qa-a">Unit test ek function/service ko isolate karke test karta hai — saari dependencies mock hoti hain. Integration test complete request-response cycle test karta hai — real (or in-memory) DB use hoti hai. Unit tests fast hote hain (ms), integration tests slow (seconds).</div>
+  </div>
+
+  <div class="qa-item">
+    <div class="qa-q" onclick="toggleQA(this)">Q2: TTL index kya hota hai MongoDB mein? <i class="ti ti-chevron-down" aria-hidden="true"></i></div>
+    <div class="qa-a">TTL (Time To Live) index MongoDB ka ek special index hai jo documents ko automatically delete karta hai after a specified time. Audit logs ke liye use karte hain — e.g., 90 din baad automatically cleanup. <code>expireAfterSeconds</code> field set karte hain date field pe.</div>
+  </div>
+
+  <div class="qa-item">
+    <div class="qa-q" onclick="toggleQA(this)">Q3: Why store file URL in Postgres, not the file itself? <i class="ti ti-chevron-down" aria-hidden="true"></i></div>
+    <div class="qa-a">Files ko object storage (MinIO/S3) mein rakhna better hai kyunki: (1) Postgres blobs ke liye optimized nahi hai — slow queries, (2) Object storage horizontally scale hota hai, (3) CDN se serve kar sakte ho, (4) Presigned URLs se secure access milta hai. Postgres mein sirf reference (URL) store karo.</div>
+  </div>
+
+  <div class="qa-item">
+    <div class="qa-q" onclick="toggleQA(this)">Q4: Presigned URL kya hota hai aur kab use karte hain? <i class="ti ti-chevron-down" aria-hidden="true"></i></div>
+    <div class="qa-a">Presigned URL ek time-limited URL hai jo private object ko temporarily access karne deta hai without exposing credentials. Use case: user PDF download karna chahta hai — server 1-hour presigned URL generate karta hai. Client directly MinIO se download karta hai — server load nahi padta. Security bhi maintain hoti hai.</div>
+  </div>
+
+  <div class="qa-item">
+    <div class="qa-q" onclick="toggleQA(this)">Q5: Audit log async kyun publish karte hain? <i class="ti ti-chevron-down" aria-hidden="true"></i></div>
+    <div class="qa-a">Agar audit save synchronously karo, toh MongoDB ka latency user ke API response ko slow karega. RabbitMQ/Bull Queue se audit asynchronously save hoti hai — user ko fast response milta hai, aur background mein log reliably save hota hai. Queue mein retry mechanism bhi built-in hota hai agar MongoDB temporarily down ho.</div>
+  </div>
+
+  <div class="qa-item">
+    <div class="qa-q" onclick="toggleQA(this)">Q6: 80% coverage target ka matlab kya hai? <i class="ti ti-chevron-down" aria-hidden="true"></i></div>
+    <div class="qa-a">80% branch/statement coverage means 80% code paths tests se cover hain. 100% chase karna impractical hai — trivial getters/setters test karna waste of time. 80% sweet spot hai — critical logic tested, edge cases covered, but diminishing returns se bache ho.</div>
+  </div>
+
+  <div class="qa-item">
+    <div class="qa-q" onclick="toggleQA(this)">Q7: NestJS interceptor vs middleware vs guard — kab kya use karein? <i class="ti ti-chevron-down" aria-hidden="true"></i></div>
+    <div class="qa-a"><strong>Guard:</strong> can this user access this route? (Auth/RBAC) — true/false return. <strong>Middleware:</strong> request transform karo before route reaches (logging, body parse). <strong>Interceptor:</strong> request aur response dono pe kaam karo — audit logs, response transform, timing. Interceptor ke paas response data access hota hai — isliye audit ke liye perfect hai.</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-bulb" aria-hidden="true"></i> Power phrases for interviews</div>
+  <div class="card-body" style="line-height:2">
+    → <em>"We use TTL indexes in MongoDB to enforce data retention policies automatically"</em><br>
+    → <em>"Audit events are published asynchronously via message queue to avoid impacting API latency"</em><br>
+    → <em>"Files are stored in object storage; only the URL reference lives in the relational database"</em><br>
+    → <em>"Presigned URLs provide time-bounded access without proxying through the application server"</em><br>
+    → <em>"We target 80% coverage — focusing on business logic and error paths, not trivial code"</em>
+  </div>
+</div>
+</div>
+
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+function toggleQA(el){
+  const ans=el.nextElementSibling;
+  ans.classList.toggle('open');
+  const icon=el.querySelector('.ti-chevron-down');
+  if(icon) icon.style.transform=ans.classList.contains('open')?'rotate(180deg)':'';
+}
+function animateCov(){
+  const bar=document.getElementById('cov-bar');
+  const lbl=document.getElementById('cov-label');
+  let w=0;
+  lbl.textContent='Running...';
+  const t=setInterval(()=>{
+    w=Math.min(w+2,84);
+    bar.style.width=w+'%';
+    if(w>=84){clearInterval(t);lbl.textContent='84% ✓ (target met!)';}
+  },20);
+}
+</script>
